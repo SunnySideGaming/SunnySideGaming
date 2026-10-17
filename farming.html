@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Sell Value Calculator | YOUR GUIDE NAME</title>
+    <meta name="description" content="Calculate what your items sell for at the NPC on Yggdrasil MR, with an optional Overcharge bonus.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Nunito+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+      .calc {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--sage);
+        border-radius: 4px;
+        padding: 18px 20px;
+        margin-top: 16px;
+      }
+
+      .calc label {
+        display: block;
+        font-weight: 700;
+        font-size: .9rem;
+        margin: 10px 0 4px;
+      }
+
+      .calc input,
+      .calc select {
+        width: 100%;
+        max-width: 260px;
+        padding: 8px 10px;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        font: inherit;
+      }
+
+      .calc input[type="checkbox"] {
+        width: auto;
+      }
+
+      .calc label.check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 400;
+      }
+
+      .calc .hint {
+        margin: 4px 0 14px;
+        color: var(--mute);
+        font-size: .9rem;
+      }
+
+      .calc .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+      }
+
+      .calc .calc-row {
+        grid-template-columns: minmax(200px, 2fr) minmax(90px, 1fr) minmax(150px, 1.5fr) auto;
+        align-items: end;
+        margin-bottom: 10px;
+      }
+
+      .calc .calc-row select {
+        max-width: none;
+      }
+
+      .calc .sub {
+        padding: 8px 0;
+        color: var(--gold);
+        font-weight: 700;
+      }
+
+      .calc .out {
+        margin-top: 14px;
+        font-weight: 700;
+        color: var(--gold);
+      }
+
+      .calc button {
+        padding: 8px 14px;
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .calc button:hover {
+        border-color: var(--gold);
+      }
+
+      @media (max-width: 640px) {
+        .calc .calc-row {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="wrap">
+        <nav>
+          <a class="brand" href="index.html">YOUR GUIDE NAME</a>
+          <a href="index.html">Home</a>
+          <a href="classes.html">Class Guide</a>
+          <a href="leveling.html">Leveling Guide</a>
+          <a href="farming.html" aria-current="page">Farming Tips</a>
+          <a href="https://mr.yggdrasilro.com/wiki/introduction-to-ygg-mr">Official Wiki</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section id="tools">
+        <div class="wrap">
+          <h1>Sell Value Calculator</h1>
+
+          <p>
+            Pick items from your inventory and enter how many you have. The first row is pre-filled
+            as an example.
+          </p>
+
+          <div class="calc" id="calc1">
+            <h3>What your items sell for at the NPC</h3>
+            <label class="check" for="oc"> <input id="oc" type="checkbox"> Overcharge: +24% on every item's sell price </label>
+            <p class="hint">
+              Assumes Merchant Overcharge Lv10. The wiki says it only helps from Base Level 90, not
+              for transcendent classes, and is applied before the 15,000z cap, so items already at
+              15,000z stay there.
+            </p>
+            <div id="c1rows"></div>
+            <button type="button" id="c1add">Add item</button>
+            <div class="out" id="c1out" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sources">
+        <div class="wrap">
+          <div class="note">
+            Item prices and the Overcharge rules come from the Yggdrasil MR wiki's
+            <a href="https://mr.yggdrasilro.com/wiki/npc-sell-prices">NPC Sell Prices</a> page. The
+            item dropdown only lists items that pay at least 30z, and equipment worth 3,000z or
+            more, so it doesn't cover everything on the wiki. Items that pay 0z at the NPC aren't
+            listed. Prices were copied on 2026-10-16 and can change.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">Fan-made guide, not the official site. Last updated: 2026-10-16.</div>
+    </footer>
+
+    <script>
+      (function () {
+        var ETC = [
+          "1carat Diamond:600|2carat Diamond:2500|3carat Diamond:5500|Agate:300|Alcohol:40|Alice's Apron:145|Aloe:50|Amethyst:480|Ancient Lips:60|Ancient Tooth:32|Animal Gore:36",
+          "Anolian Skin:58|Antelope Horn:40|Antelope Skin:45|Aquamarine:600|Armor Piece of Dullahan:47|Ba Gua:280|Bacillus:61|Baphomet Doll:1800|Bat Cage:52|Biotite:300",
+          "Black Cat Doll:86|Black Dyestuffs:800|Black Ladle:40|Blade Lost in Darkness:1200|Bloody Edge:1000|Bloody Page:40|Bloody Rune:120|Blue Bijou:53|Blue Feather:140|Blue Gemstone:36",
+          "Bookclip in Memory:180|Brigan:44|Broken Crown:180|Broken Needle:41|Broken Pharaoh Emblem:201|Broken Shell:54|Broken Sword:35|Brown Root:33|Burning Hair:58|Burning Heart:55",
+          "Burning Horseshoe:49|Burnt Part:96|Burnt Tree:43|Cat's Eye:57|Chef King Orleans Vol.1:800|China:100|Chonchon Doll:300|Citrin:300|Clattering Skull:50|Claw of Rat:44|Coal:30",
+          "Cogwheel:90|Contorted Self-Portrait:121|Coral Reef:46|Crest Piece:300|Crystal Blue:60|Crystal Fragment:33|Crystal Mirror:900|Cursed Ruby:36|Cursed Seal:133|Cyfar:46|Dark Piece:60",
+          "Dark Red Scale:15000|Darkgreen Dyestuffs:800|Destroyed Armor:62|Detrimindexta:32|Dragon Horn:32|Dragon Scale:30|Dragon Skin:61|Dragon Tail:72|Elunium:66|Emerald:360|Evil Horn:72",
+          "Executioner's Mitten:450|Fang:40|Fig Leaf:32|Fire Dragon Scale:185|Flame Heart:180|Flashlight:81|Fluorescent Liquid:42|Four Leaf Clover:8000|Fragment of Agony:150|Fragment of Darkness:50",
+          "Fragment of Despair:150|Fragment of Hatred:150|Fragment of Misery:150|Fragment of Rossata Stone:260|Fragment:80|Frozen Rose:2800|Fur:42|Garnet:360|Gemstone:142|Giant Butterfly Wing:36",
+          "Glacial Heart:36|Glass Bead:84|Glitter Shell:31|Gold:15000|Golden Ornament:190|Great Nature:180|Green Bijou:53|Green Live:80|Handcuffs:43|Hard Feeler:34|Hard Skin:88|Harpy Feather:68",
+          "Harpy Talon:72|Helm of Dullahan:81|Heroic Emblem:300|Hinalle:50|Honey Pot:37|Horn of Hillslion:30|Horn of Tendrilion:50|Horrendous Hair:48|Horseshoe:35|Huge Leaf:36|Hung Doll:61",
+          "Ice Cubic:39|Ice Scale:302|Illusion Flower:100|Insect Leg:39|Izidor:50|Kafra Legend Vol.1:800|Karvodailnirol:32|Large Jellopy:50|Lava:66|Little Evil Horn:31|Little Evil Wing:120",
+          "Little Ghost Doll:72|Live Coal:38|Manacles:39|Memento:36|Ment:50|Metal Fragment:64|Mud Lump:52|Munak Doll:534|Muscovite:300|Mystic Frozen:240|Mystic Horn:60|Needle of Alarm:32",
+          "Needle Packet:49|Nine Tails:39|Nose Ring:34|Nursing Bottle:66|Ogre Tooth:39|Old Manteau:63|Old Pick:30|Old Portrait:150|Old Shuriken:106|Old White Cloth:33|Opal:480|Ora Ora:5500",
+          "Oridecon:110|Osiris Doll:1400|Pearl:360|Peridot:180|Phlogopite:300|Piece of Black Cloth:31|Piece of Shield:168|Pinafore:57|Pocket Watch:342|Poring Doll:180|Puppet:60|Pyroxene:300",
+          "Raccoon Doll:500|Red Bijou:53|Red Blood:60|Red Feather:133|Red Frame:180|Red Gemstone:36|Red Muffler:39|Refined Bradium:66|Reins:48|Research Chart:50|Rice Ball Doll:30",
+          "Rocker Doll:240|Rose Quartz:180|Rouge:600|Rough Elunium:39|Rough Oridecon:33|Rough Wind:240|Round Shell:46|Ruby:480|Rune of Darkness:151|Rusty Kitchen Knife:106|Rusty Screw:32",
+          "Sand Clump:42|Sapphire:360|Sardonyx:600|Scorpion Claw:42|Sea-Otter Fur:49|Sharp Leaf:48|Sharp Paper:54|Shining Spear Blade:84|Singing Plant:30|Skeletal Armor Piece:205|Skirt of Virgin:170",
+          "Skull:62|Slick Paper:42|Soft Silk:72|Solid Iron Piece:50|Spiritual Crystal:63|Spoon Stub:150|Spore Doll:550|Star Crumb:270|Star Dust:120|Steel:60|Stiff Horn:63|Stone Fragment:38",
+          "Straw Basket:37|Striped Sock:55|Suspicious Hat:77|Tail of Steel Scorpion:32|Talon of Griffon:541|Tangled Chains:44|Tassel:47|Tattered Clothes:76|Three-Headed Dragon's Head:95",
+          "Tiger Skin:54|Tiger's Footskin:150|Tongue:31|Topaz:360|Torn Magic Book:68|Torn Scroll:81|Tough Vines:30|Toxic Gas:39|Transparent Celestial Robe:39|Treasure Box:15000|Turquoise:300",
+          "Turtle Shell:40|Used Iron Plate:61|Valhalla's Flower:15000|White Mask:63|Will of Red Darkness:153|Will of the Darkness:44|Wind of Verdure:60|Wing of Dragonfly:31|Withered Flower:53",
+          "Witherless Rose:3300|Wooden Heart:40|Worn Out Page:56|Worn-out Kimono:35|Worn-out Magic Scroll:46|Worn-out Prison Uniform:40|Yellow Bijou:53|Yellow Gemstone:36|Yoyo Doll:600|Zircon:600"
+          ].join("|");
+        var USE = [
+          "Armlet of Obedience:1800|Authoritative Badge:87|Blue Potion:300|Book of the Devil:180|Box of Resentment:100|Cheese:168|Concentration Potion:48|Condensed White Potion:165",
+          "Condensed Yellow Potion:60|Cooked Nine Tail's Tails:10000|Dragon Breath Cocktail:10000|Earthworm the Dude:400|Fatty Chubby Earthworm:500|Forbidden Red Candle:2000|Gift Box:100",
+          "Green Ale:500|Honey:30|Hwergelmir's Tonic:10000|Immortal Stew:10000|Lucky Cookie:100|Mastela Fruit:510|Monster Juice:150|Old Blue Box:800|Old Broom:35|Old Card Album:1000",
+          "Old Purple Box:1000|Orange Juice:150|Oridecon Hammer:300|Panacea:30|Pet Food:60|Pet Incubator:180|Piece of Cake:180|Poison Bottle:400|Prickly Fruit:32|Professional Cooking Kit:160",
+          "Rainbow Carrot:250|Red Prickly Fruit:52|Rotten Fish:250|Royal Cooking Kit:500|Royal Jelly:420|Shining Stone:300|Shrimp:30|Silver Knife of Chastity:1200|Small Bottle:64",
+          "Soft Apron:2000|Steamed Alligator with Vegetable:4000|Steamed Desert Scorpions:10000|Stone of Sage:10000|Sweet Milk:700|Unripe Apple:100|Well-baked Cookie:60|Well-Dried Bone:1000",
+          "White Chocolate:500|Yggdrasil Berry:500|Yggdrasil Seed:500"
+          ].join("|");
+        var EQP = [
+          "Aebecee's Raging Typhoon Armor:13600|Ancient Cape:8200|Arbalest:4800|Arc Wand:4500|Ballista:12400|Beret:3000|Bible:6000|Bloodied Shackle Ball:5000|Book of Billows:3500|Book of Gust of Wind:3500",
+          "Book of Mother Earth:3500|Book of the Apocalypse:6000|Book of the Blazing Sun:3500|Book:3000|Broad Sword:6500|Brooch:3000|Buster:3400|Butcher:13000|Chain Mail:6500|Cinquedea:4000|Claw:6700",
+          "Claymore:5920|Claytos Cracking Earth Armor:13600|Clip:3000|Coif:15000|Cowardice Blade:5200|Critical Ring:7500|Cursed Dagger:8000|Dagger of Counter:12000|Damascus:4900|Destroyer:11000",
+          "Drifter:8000|Earring:3000|Eye of Dullahan:9000|Falcon Muffler:3000|Finger:5800|Fricca's Circlet:3000|Fricco's Shoes:3000|Full Plate:8000|Gakkung Bow:4200|Garrison:4800|Gate Keeper-DD:7200",
+          "Gate Keeper:5600|Gemmed Sallet:5000|Glove:3000|Goibne's Armor:5000|Goibne's Greaves:3000|Goibne's Helm:3000|Goibne's Spaulders:3000|Gold Lux:10000|Greaves:5400|Guitar:4700",
+          "Haedonggum:5000|Halberd:5400|Harp:6200|Helm:4400|Holy Avenger:15000|Holy Guard:8500|Huuma Blaze Shuriken:7800|Huuma Giant Wheel Shuriken:4000|Huuma Wing Shuriken:9000|Infiltrator:5700",
+          "Jamadhar:3720|Kamaitachi:4800|Katar:4100|Katar of Frozen Icicle:4500|Katar of Piercing Wind:4500|Katar of Quaking:4500|Katar of Raging Blaze:4500|Khukri:15000|Lance:6000",
+          "Legion Plate Armor:10250|Long Barrel:4000|Lucius's Fierce Armor of Volcano:13600|Magni's Cap:3000|Manteau:3200|Mirror Shield:6000|Monk Hat:3000|Morning Star:4100|Morpheus's Bracelet:3000",
+          "Morpheus's Hood:3000|Morpheus's Ring:3000|Morpheus's Shawl:3000|Morrigane's Belt:3000|Morrigane's Helm:3000|Morrigane's Manteau:3000|Morrigane's Pendant:3000|Necklace:3000",
+          "Odin's Blessing:3000|Padded Armor:4800|Ragamuffin Manteau:5600|Rante Whip:3200|Ring:3000|Robe of Cast:12480|Sacred Mission:12800|Safety Ring:7500|Saint's Robe:5400",
+          "Saphien's Armor of Ocean:13600|Shield:5600|Sharpened Legbone of Ghoul:5250|Stone Buckler:3000|Studded Knuckles:3200|Survivor's Rod:8500|Sword Mace:5000|Tablet:5100|Thief Clothes:7400",
+          "Thunder P:7600|Tights:7100|Town Sword:4200|Trident:5100|Tsurugi:5100|Two-Handed Axe:4400|Two-Handed Sword:6000|Ulle's Cap:3000|Vali's Manteau:3000|Valkyrja's Shield:3000|Vidar's Boots:3000|Wedding Dress:4300"
+          ].join("|");
+
+        function money(n) {
+          return Math.round(n).toLocaleString('en-US') + 'z';
+        }
+
+        // Item list used by the dropdown
+        var items = [];
+        [['etc', ETC], ['use', USE], ['eqp', EQP]].forEach(function (group) {
+          group[1].split('|').forEach(function (entry) {
+            var cut = entry.lastIndexOf(':');
+            items.push({ name: entry.slice(0, cut), price: +entry.slice(cut + 1), cat: group[0] });
+          });
+        });
+
+        // Calculator 1: what an inventory sells for at the NPC
+        var OVERCHARGE = 1.24;
+        var NPC_CAP = 15000;
+        var GROUPS = [
+          ['etc', 'ETC / loot'],
+          ['use', 'Potions / usables'],
+          ['eqp', 'Equipment (3,000z+)']
+          ];
+        var rowsBox = document.getElementById('c1rows');
+        var overchargeEl = document.getElementById('oc');
+        var rows = [];
+        var rowId = 0;
+
+        function make(tag, props, kids) {
+          var node = document.createElement(tag);
+          Object.keys(props || {}).forEach(function (key) {
+            node[key] = props[key];
+          });
+          (kids || []).forEach(function (kid) {
+            node.appendChild(kid);
+          });
+          return node;
+        }
+
+        function itemSelect(id, selectedName) {
+          var select = make('select', { id: id });
+          select.appendChild(make('option', { value: '0', textContent: 'Choose an item...' }));
+          GROUPS.forEach(function (group) {
+            var optgroup = make('optgroup', { label: group[1] });
+            items.filter(function (it) {
+              return it.cat === group[0];
+            }).sort(function (a, b) {
+              return a.name.localeCompare(b.name);
+            }).forEach(function (it) {
+              var option = make('option', { value: String(it.price), textContent: it.name + ' (' + money(it.price) + ')' });
+              option.selected = it.name === selectedName;
+              optgroup.appendChild(option);
+            });
+            select.appendChild(optgroup);
+          });
+          return select;
+        }
+
+        function sellPrice(price) {
+          if (!overchargeEl.checked) return price;
+          return Math.min(NPC_CAP, Math.floor(price * OVERCHARGE));
+        }
+
+        function addRow(name, qty) {
+          var id = ++rowId;
+          var select = itemSelect('i' + id, name);
+          var qtyInput = make('input', { id: 'q' + id, type: 'number', min: '0', step: '1', value: String(qty) });
+          var sub = make('div', { className: 'sub', textContent: '-' });
+          var remove = make('button', { type: 'button', textContent: 'Remove' });
+          var row = make('div', { className: 'row calc-row' }, [
+            make('div', {}, [make('label', { htmlFor: select.id, textContent: 'Item' }), select]),
+            make('div', {}, [make('label', { htmlFor: qtyInput.id, textContent: 'Quantity' }), qtyInput]),
+            make('div', {}, [make('label', { textContent: 'Each = subtotal' }), sub]),
+            make('div', {}, [remove])
+            ]);
+          var entry = { select: select, qty: qtyInput, sub: sub };
+          remove.addEventListener('click', function () {
+            rowsBox.removeChild(row);
+            rows.splice(rows.indexOf(entry), 1);
+            calc1();
+          });
+          rows.push(entry);
+          rowsBox.appendChild(row);
+        }
+
+        function calc1() {
+          var total = 0;
+          var base = 0;
+          var count = 0;
+          rows.forEach(function (r) {
+            var price = +r.select.value || 0;
+            var qty = Math.max(0, Math.floor(+r.qty.value || 0));
+            var each = sellPrice(price);
+            base += price * qty;
+            total += each * qty;
+            count += price ? qty : 0;
+            r.sub.textContent = price ? money(each) + ' = ' + money(each * qty) : '-';
+          });
+          var text = 'Total: ' + money(total) + '   |   Items: ' + count.toLocaleString('en-US');
+          if (overchargeEl.checked) {
+            text += '   |   Overcharge adds ' + money(total - base);
+          }
+          document.getElementById('c1out').textContent = text;
+        }
+
+        addRow('Nine Tails', 100);
+        addRow('', 0);
+        addRow('', 0);
+        document.getElementById('c1add').addEventListener('click', function () {
+          addRow('', 0);
+          calc1();
+        });
+        document.getElementById('calc1').addEventListener('input', calc1);
+        document.getElementById('calc1').addEventListener('change', calc1);
+        calc1();
+      })();
+    </script>
+  </body>
+</html>
