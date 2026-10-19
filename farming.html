@@ -19,6 +19,10 @@
         margin-top: 16px;
       }
 
+      .calc [hidden] {
+        display: none !important;
+      }
+
       .calc label {
         display: block;
         font-weight: 700;
@@ -26,8 +30,7 @@
         margin: 10px 0 4px;
       }
 
-      .calc input,
-      .calc select {
+      .calc input {
         width: 100%;
         max-width: 260px;
         padding: 8px 10px;
@@ -55,6 +58,63 @@
         font-size: .9rem;
       }
 
+      .calc .search-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        max-width: 520px;
+      }
+
+      .calc .search-box {
+        position: relative;
+        flex: 1;
+      }
+
+      .calc .search-box input {
+        max-width: none;
+      }
+
+      .calc .results {
+        position: absolute;
+        z-index: 5;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin: 4px 0 0;
+        padding: 4px 0;
+        list-style: none;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        max-height: 320px;
+        overflow-y: auto;
+      }
+
+      .calc .results li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      .calc .results li.opt:hover,
+      .calc .results li[aria-selected="true"] {
+        background: var(--bg);
+      }
+
+      .calc .results li.info {
+        color: var(--mute);
+        font-size: .9rem;
+        cursor: default;
+      }
+
+      .calc .results .meta {
+        color: var(--mute);
+        font-size: .85rem;
+        white-space: nowrap;
+      }
+
       .calc .row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -62,17 +122,23 @@
       }
 
       .calc .calc-row {
-        grid-template-columns: minmax(200px, 2fr) minmax(90px, 1fr) minmax(150px, 1.5fr) auto;
-        align-items: end;
+        grid-template-columns: minmax(180px, 2fr) minmax(90px, 1fr) minmax(150px, 1.5fr) auto;
+        align-items: center;
         margin-bottom: 10px;
       }
 
-      .calc .calc-row select {
-        max-width: none;
+      .calc .calc-head {
+        margin: 18px 0 6px;
+        color: var(--mute);
+        font-size: .85rem;
+        font-weight: 700;
+      }
+
+      .calc .name {
+        font-weight: 700;
       }
 
       .calc .sub {
-        padding: 8px 0;
         color: var(--gold);
         font-weight: 700;
       }
@@ -101,6 +167,12 @@
         .calc .calc-row {
           grid-template-columns: 1fr 1fr;
         }
+        .calc .calc-row .name {
+          grid-column: 1 / -1;
+        }
+        .calc .calc-head {
+          display: none;
+        }
       }
     </style>
   </head>
@@ -109,11 +181,11 @@
     <header>
       <div class="wrap">
         <nav>
-          <a class="brand" href="">SunnySideGaming</a>
+          <a class="brand" href="">SunnySide Gaming</a>
           <a href="">Home</a>
           <a href="">Class Guide</a>
           <a href="">Leveling Guide</a>
-          <a href="" aria-current="page">Farming Tips</a>
+          <a href="farming.html" aria-current="page">Farming Tips</a>
           <a href="https://mr.yggdrasilro.com/wiki/introduction-to-ygg-mr">Official Wiki</a>
         </nav>
       </div>
@@ -125,19 +197,33 @@
           <h1>Sell Value Calculator</h1>
 
           <p>
-            Pick items from your inventory and enter how many you have. The first row is pre-filled
-            as an example.
+            Search for an item and click it to add it to your list, then enter how many you have.
           </p>
 
           <div class="calc" id="calc1">
             <h3>What your items sell for at the NPC</h3>
             <label class="check" for="oc"> <input id="oc" type="checkbox"> Overcharge: +24% on every item's sell price </label>
             <p class="hint">
-              Assumes Merchant Overcharge Lv10. Only applies from Base Level 90 and is applied before the 15,000z cap, so items already at
+              Assumes Merchant Overcharge Lv10. The wiki says it only helps from Base Level 90, not
+              for transcendent classes, and is applied before the 15,000z cap, so items already at
               15,000z stay there.
             </p>
+            <label for="c1search">Search for an item</label>
+            <div class="search-row">
+              <div class="search-box">
+                <input id="c1search" type="text" role="combobox" aria-expanded="false" aria-controls="c1results" aria-autocomplete="list" autocomplete="off" placeholder="Type an item name, e.g. zircon">
+                <ul class="results" id="c1results" role="listbox" aria-label="Matching items" hidden></ul>
+              </div>
+              <button type="button" id="c1add">Add item</button>
+            </div>
+            <div class="row calc-row calc-head" id="c1head" hidden>
+              <div>Item</div>
+              <div>Quantity</div>
+              <div>Each = subtotal</div>
+              <div></div>
+            </div>
             <div id="c1rows"></div>
-            <button type="button" id="c1add">Add item</button>
+            <p class="hint" id="c1empty">No items added yet.</p>
             <div class="out" id="c1out" aria-live="polite"></div>
           </div>
         </div>
@@ -148,8 +234,8 @@
           <div class="note">
             Item prices and the Overcharge rules come from the Yggdrasil MR wiki's
             <a href="https://mr.yggdrasilro.com/wiki/npc-sell-prices">NPC Sell Prices</a> page. The
-            item dropdown only lists items that pay at least 30z, and equipment worth 3,000z or
-            more, so it doesn't cover everything on the wiki. Items that pay 0z at the NPC aren't
+            item search only covers items that pay at least 30z, and equipment worth 3,000z or more,
+            so it doesn't include everything on the wiki. Items that pay 0z at the NPC aren't
             listed. Prices were copied on 2026-10-16 and can change.
           </div>
         </div>
@@ -193,7 +279,7 @@
           "Green Ale:500|Honey:30|Hwergelmir's Tonic:10000|Immortal Stew:10000|Lucky Cookie:100|Mastela Fruit:510|Monster Juice:150|Old Blue Box:800|Old Broom:35|Old Card Album:1000",
           "Old Purple Box:1000|Orange Juice:150|Oridecon Hammer:300|Panacea:30|Pet Food:60|Pet Incubator:180|Piece of Cake:180|Poison Bottle:400|Prickly Fruit:32|Professional Cooking Kit:160",
           "Rainbow Carrot:250|Red Prickly Fruit:52|Rotten Fish:250|Royal Cooking Kit:500|Royal Jelly:420|Shining Stone:300|Shrimp:30|Silver Knife of Chastity:1200|Small Bottle:64",
-          "Soft Apron:2000|Steamed Alligator with Vegetable:4000|Steamed Desert Scorpions:10000|Strawberry:12|Stone of Sage:10000|Sweet Milk:700|Unripe Apple:100|Well-baked Cookie:60|Well-Dried Bone:1000",
+          "Soft Apron:2000|Steamed Alligator with Vegetable:4000|Steamed Desert Scorpions:10000|Stone of Sage:10000|Sweet Milk:700|Unripe Apple:100|Well-baked Cookie:60|Well-Dried Bone:1000",
           "White Chocolate:500|Yggdrasil Berry:500|Yggdrasil Seed:500"
           ].join("|");
         var EQP = [
@@ -211,11 +297,16 @@
           "Thunder P:7600|Tights:7100|Town Sword:4200|Trident:5100|Tsurugi:5100|Two-Handed Axe:4400|Two-Handed Sword:6000|Ulle's Cap:3000|Vali's Manteau:3000|Valkyrja's Shield:3000|Vidar's Boots:3000|Wedding Dress:4300"
           ].join("|");
 
+        var LABEL = { etc: 'ETC', use: 'Usable', eqp: 'Equipment' };
+        var OVERCHARGE = 1.24;
+        var NPC_CAP = 15000;
+        var MAX_SUGGESTIONS = 10;
+
         function money(n) {
           return Math.round(n).toLocaleString('en-US') + 'z';
         }
 
-        // Item list used by the dropdown
+        // Item list used by the search
         var items = [];
         [['etc', ETC], ['use', USE], ['eqp', EQP]].forEach(function (group) {
           group[1].split('|').forEach(function (entry) {
@@ -224,18 +315,16 @@
           });
         });
 
-        // Calculator 1: what an inventory sells for at the NPC
-        var OVERCHARGE = 1.24;
-        var NPC_CAP = 15000;
-        var GROUPS = [
-          ['etc', 'ETC / loot'],
-          ['use', 'Potions / usables'],
-          ['eqp', 'Equipment (3,000z+)']
-          ];
+        var searchEl = document.getElementById('c1search');
+        var searchBox = searchEl.parentNode;
+        var listEl = document.getElementById('c1results');
         var rowsBox = document.getElementById('c1rows');
+        var headEl = document.getElementById('c1head');
+        var emptyEl = document.getElementById('c1empty');
         var overchargeEl = document.getElementById('oc');
         var rows = [];
-        var rowId = 0;
+        var suggestions = [];
+        var active = -1;
 
         function make(tag, props, kids) {
           var node = document.createElement(tag);
@@ -248,64 +337,150 @@
           return node;
         }
 
-        function itemSelect(id, selectedName) {
-          var select = make('select', { id: id });
-          select.appendChild(make('option', { value: '0', textContent: 'Choose an item...' }));
-          GROUPS.forEach(function (group) {
-            var optgroup = make('optgroup', { label: group[1] });
-            items.filter(function (it) {
-              return it.cat === group[0];
-            }).sort(function (a, b) {
-              return a.name.localeCompare(b.name);
-            }).forEach(function (it) {
-              var option = make('option', { value: String(it.price), textContent: it.name + ' (' + money(it.price) + ')' });
-              option.selected = it.name === selectedName;
-              optgroup.appendChild(option);
-            });
-            select.appendChild(optgroup);
+        // Search box: matches that start with the text come first, then the rest A-Z
+        function findMatches(query) {
+          var q = query.trim().toLowerCase();
+          if (!q) return [];
+          return items.filter(function (it) {
+            return it.name.toLowerCase().indexOf(q) !== -1;
+          }).sort(function (a, b) {
+            var aStart = a.name.toLowerCase().indexOf(q) === 0 ? 0 : 1;
+            var bStart = b.name.toLowerCase().indexOf(q) === 0 ? 0 : 1;
+            return aStart - bStart || a.name.localeCompare(b.name);
           });
-          return select;
         }
 
+        function setActive(index) {
+          active = index;
+          suggestions.forEach(function (it, i) {
+            listEl.children[i].setAttribute('aria-selected', i === active ? 'true' : 'false');
+          });
+          if (active >= 0) {
+            searchEl.setAttribute('aria-activedescendant', 'c1opt' + active);
+            var li = listEl.children[active];
+            if (li.scrollIntoView) li.scrollIntoView({ block: 'nearest' });
+          } else {
+            searchEl.removeAttribute('aria-activedescendant');
+          }
+        }
+
+        function openList() {
+          listEl.hidden = false;
+          searchEl.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeList() {
+          listEl.hidden = true;
+          searchEl.setAttribute('aria-expanded', 'false');
+          active = -1;
+          searchEl.removeAttribute('aria-activedescendant');
+        }
+
+        function renderSuggestions() {
+          var found = findMatches(searchEl.value);
+          suggestions = found.slice(0, MAX_SUGGESTIONS);
+          listEl.textContent = '';
+          if (!searchEl.value.trim()) {
+            closeList();
+            return;
+          }
+          suggestions.forEach(function (it, i) {
+            var li = make('li', { id: 'c1opt' + i, className: 'opt' }, [
+              make('span', { textContent: it.name }),
+              make('span', { className: 'meta', textContent: LABEL[it.cat] + ' - ' + money(it.price) })
+              ]);
+            li.setAttribute('role', 'option');
+            li.addEventListener('click', function () {
+              addItem(it);
+            });
+            listEl.appendChild(li);
+          });
+          if (!suggestions.length) {
+            listEl.appendChild(make('li', { className: 'info', textContent: 'No matching items' }));
+          } else if (found.length > suggestions.length) {
+            listEl.appendChild(make('li', {
+            className: 'info',
+              textContent: 'Showing ' + suggestions.length + ' of ' + found.length +
+              ' matches. Keep typing to narrow it down.'
+              }));
+          }
+          openList();
+          setActive(suggestions.length ? 0 : -1);
+        }
+
+        // The list of items the player has added
         function sellPrice(price) {
           if (!overchargeEl.checked) return price;
           return Math.min(NPC_CAP, Math.floor(price * OVERCHARGE));
         }
 
-        function addRow(name, qty) {
-          var id = ++rowId;
-          var select = itemSelect('i' + id, name);
-          var qtyInput = make('input', { id: 'q' + id, type: 'number', min: '0', step: '1', value: String(qty) });
-          var sub = make('div', { className: 'sub', textContent: '-' });
+        function refresh() {
+          headEl.hidden = rows.length === 0;
+          emptyEl.hidden = rows.length > 0;
+        }
+
+        function addRow(it) {
+          var qtyInput = make('input', { type: 'number', min: '0', step: '1', value: '1' });
+          qtyInput.setAttribute('aria-label', 'Quantity of ' + it.name);
+          var sub = make('div', { className: 'sub' });
           var remove = make('button', { type: 'button', textContent: 'Remove' });
+          remove.setAttribute('aria-label', 'Remove ' + it.name);
           var row = make('div', { className: 'row calc-row' }, [
-            make('div', {}, [make('label', { htmlFor: select.id, textContent: 'Item' }), select]),
-            make('div', {}, [make('label', { htmlFor: qtyInput.id, textContent: 'Quantity' }), qtyInput]),
-            make('div', {}, [make('label', { textContent: 'Each = subtotal' }), sub]),
+            make('div', { className: 'name', textContent: it.name }),
+            make('div', {}, [qtyInput]),
+            sub,
             make('div', {}, [remove])
             ]);
-          var entry = { select: select, qty: qtyInput, sub: sub };
+          var entry = { item: it, qty: qtyInput, sub: sub };
           remove.addEventListener('click', function () {
             rowsBox.removeChild(row);
             rows.splice(rows.indexOf(entry), 1);
-            calc1();
+            refresh();
+            calc();
           });
           rows.push(entry);
           rowsBox.appendChild(row);
         }
 
-        function calc1() {
+        function addItem(it) {
+          var existing = rows.filter(function (r) {
+            return r.item.name === it.name;
+          })[0];
+          if (existing) {
+            existing.qty.value = String((+existing.qty.value || 0) + 1);
+          } else {
+            addRow(it);
+          }
+          searchEl.value = '';
+          listEl.textContent = '';
+          suggestions = [];
+          closeList();
+          searchEl.focus();
+          refresh();
+          calc();
+        }
+
+        function addFromSearch() {
+          var pick = active >= 0 ? suggestions[active] : suggestions[0];
+          if (!pick) {
+            searchEl.focus();
+            return;
+          }
+          addItem(pick);
+        }
+
+        function calc() {
           var total = 0;
           var base = 0;
           var count = 0;
           rows.forEach(function (r) {
-            var price = +r.select.value || 0;
+            var price = r.item.price;
             var qty = Math.max(0, Math.floor(+r.qty.value || 0));
             var each = sellPrice(price);
             base += price * qty;
             total += each * qty;
-            count += price ? qty : 0;
-            r.sub.textContent = price ? money(each) + ' = ' + money(each * qty) : '-';
+            count += qty;
+            r.sub.textContent = money(each) + ' = ' + money(each * qty);
           });
           var text = 'Total: ' + money(total) + '   |   Items: ' + count.toLocaleString('en-US');
           if (overchargeEl.checked) {
@@ -314,16 +489,32 @@
           document.getElementById('c1out').textContent = text;
         }
 
-        addRow('Nine Tails', 100);
-        addRow('', 0);
-        addRow('', 0);
-        document.getElementById('c1add').addEventListener('click', function () {
-          addRow('', 0);
-          calc1();
+        searchEl.addEventListener('input', renderSuggestions);
+        searchEl.addEventListener('focus', function () {
+          if (searchEl.value.trim()) renderSuggestions();
         });
-        document.getElementById('calc1').addEventListener('input', calc1);
-        document.getElementById('calc1').addEventListener('change', calc1);
-        calc1();
+        searchEl.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            if (!suggestions.length) return;
+            e.preventDefault();
+            if (listEl.hidden) openList();
+            var next = e.key === 'ArrowDown' ? active + 1 : active - 1;
+            setActive(Math.max(0, Math.min(suggestions.length - 1, next)));
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            addFromSearch();
+          } else if (e.key === 'Escape') {
+            closeList();
+          }
+        });
+        document.getElementById('c1add').addEventListener('click', addFromSearch);
+        document.addEventListener('click', function (e) {
+          if (!searchBox.contains(e.target)) closeList();
+        });
+        rowsBox.addEventListener('input', calc);
+        overchargeEl.addEventListener('change', calc);
+        refresh();
+        calc();
       })();
     </script>
   </body>
